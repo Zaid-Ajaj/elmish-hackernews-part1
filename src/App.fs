@@ -140,7 +140,7 @@ let render (state: State) (dispatch: Msg -> unit) =
     prop.children [
       Html.h1 [
         prop.className "title"
-        prop.text "Elmish Hacker News"
+        prop.text "Elmish Hackernews"
       ]
 
       renderItems state.StoryItems
