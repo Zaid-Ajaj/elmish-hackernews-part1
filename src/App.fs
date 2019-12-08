@@ -82,11 +82,14 @@ let update (msg: Msg) (state: State) =
   match msg with
   | LoadStoryItems Started ->
       let nextState = { state with StoryItems = InProgress }
-      let nextCmd = Cmd.fromAsync loadStoryItems
-      nextState, nextCmd
+      nextState, Cmd.fromAsync loadStoryItems
 
-  | LoadStoryItems (Finished items) ->
-      let nextState = { state with StoryItems = Resolved items }
+  | LoadStoryItems (Finished (Ok storyItems)) ->
+      let nextState = { state with StoryItems = Resolved (Ok storyItems) }
+      nextState, Cmd.none
+
+  | LoadStoryItems (Finished (Error error)) ->
+      let nextState = { state with StoryItems = Resolved (Error error) }
       nextState, Cmd.none
 
 let renderError (errorMsg: string) =
