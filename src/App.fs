@@ -9,8 +9,7 @@ open Fable.SimpleHttp
 type HackernewsItem = {
   id: int
   title: string
-  url: string
-  score : int
+  url: string option
 }
 
 type State = {
@@ -29,8 +28,7 @@ let itemDecoder : Decoder<HackernewsItem> =
   Decode.object (fun fields -> {
     id = fields.Required.At [ "id" ] Decode.int
     title = fields.Required.At [ "title" ] Decode.string
-    url = fields.Required.At [ "url" ] Decode.string
-    score = fields.Required.At [ "score" ] Decode.int
+    url = fields.Optional.At [ "url" ] Decode.string
   })
 
 let storiesEndpoint = "https://hacker-news.firebaseio.com/v0/topstories.json"
@@ -97,24 +95,22 @@ let renderError (errorMsg: string) =
     prop.text errorMsg
   ]
 
-let div (classes: string list) (children: ReactElement list) =
-  Html.div [
-    prop.className classes
-    prop.children children
-  ]
-
 let renderItem item =
   Html.div [
     prop.key item.id
     prop.className "box"
     prop.style [ style.marginTop 15; style.marginBottom 15 ]
     prop.children [
-      Html.a [
-        prop.style [ style.textDecoration.underline ]
-        prop.target.blank
-        prop.href item.url
-        prop.text item.title
-      ]
+      match item.url with
+      | Some url ->
+          Html.a [
+            prop.style [ style.textDecoration.underline ]
+            prop.target.blank
+            prop.href url
+            prop.text item.title
+          ]
+      | None ->
+          Html.p item.title
     ]
   ]
 
@@ -132,7 +128,7 @@ let renderItems = function
   | HasNotStartedYet -> Html.none
   | InProgress -> spinner
   | Resolved (Error errorMsg) -> renderError errorMsg
-  | Resolved (Ok items) -> Html.fragment [ for item in items -> renderItem item ]
+  | Resolved (Ok items) -> React.fragment [ for item in items -> renderItem item ]
 
 let render (state: State) (dispatch: Msg -> unit) =
   Html.div [
