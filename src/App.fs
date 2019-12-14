@@ -33,27 +33,22 @@ let itemDecoder : Decoder<HackernewsItem> =
 
 let storiesEndpoint = "https://hacker-news.firebaseio.com/v0/topstories.json"
 
-let (|HttpOk|HttpError|) status =
-  match status with
-  | 200 -> HttpOk
-  | _ -> HttpError
-
 let loadStoryItem (itemId: int) = async {
   let endpoint = sprintf "https://hacker-news.firebaseio.com/v0/item/%d.json" itemId
   let! (status, responseText) = Http.get endpoint
   match status with
-  | HttpOk ->
+  | 200 ->
     match Decode.fromString itemDecoder responseText with
     | Ok storyItem -> return Some storyItem
     | Error _ -> return None
-  | HttpError ->
+  | _ ->
     return None
 }
 
 let loadStoryItems = async {
   let! (status, responseText) = Http.get storiesEndpoint
   match status with
-  | HttpOk ->
+  | 200 ->
     // parse the response text as a list of IDs (integers)
     let storyIds = Decode.fromString (Decode.list Decode.int) responseText
     match storyIds with
@@ -73,7 +68,7 @@ let loadStoryItems = async {
     | Error errorMsg ->
         // could not parse the array of story ID's
         return LoadStoryItems (Finished (Error errorMsg))
-  | HttpError ->
+  | _ ->
       // non-OK response goes finishes with an error
       return LoadStoryItems (Finished (Error responseText))
 }
